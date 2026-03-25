@@ -12,6 +12,10 @@ body{font-family:system-ui,sans-serif;background:#0f0f0f;color:#e8e8e8;padding:1
 .controls{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
 .day-btn{font-size:12px;padding:4px 12px;border-radius:999px;border:1px solid #333;background:transparent;color:#aaa;cursor:pointer}
 .day-btn.active{background:#252525;color:#f0f0f0;font-weight:500;border-color:#555}
+.day-btn .day-type-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:4px;vertical-align:middle}
+.dot-hiit{background:#a99be0}
+.dot-resist{background:#7ab3e0}
+.dot-rest{background:#7ac09a}
 .wake-wrap{display:flex;align-items:center;gap:8px;margin-bottom:1rem;padding:10px 12px;background:#1a1a1a;border-radius:8px;border:1px solid #2a2a2a}
 .wake-label{font-size:13px;color:#aaa}
 .wake-input{font-size:15px;font-weight:500;color:#f0f0f0;background:transparent;border:none;outline:none;width:80px;cursor:pointer;color-scheme:dark}
@@ -24,6 +28,7 @@ body{font-family:system-ui,sans-serif;background:#0f0f0f;color:#e8e8e8;padding:1
 .slot.gym{background:#1a1230;border-color:#2e2050}
 .slot.food{background:#1f1800;border-color:#3a2e00}
 .slot.evening{background:#1a1a1a;border-color:#2a2a2a}
+.slot.review{background:#1a1520;border-color:#2e2040}
 .slot.dimmed{opacity:0.25}
 .slot-time{font-size:12px;color:#e8e8e8;min-width:54px;padding-top:1px;font-weight:500;white-space:nowrap}
 .slot-content{flex:1}
@@ -36,8 +41,10 @@ body{font-family:system-ui,sans-serif;background:#0f0f0f;color:#e8e8e8;padding:1
 .b-resist{background:#0d1f33;color:#7ab3e0}
 .b-semax{background:#1f1000;color:#e0a07a}
 .b-green{background:#0d1f15;color:#7ac09a}
+.b-weekly{background:#1a1520;color:#c09ae0}
 .section-label{font-size:10px;font-weight:500;letter-spacing:0.07em;text-transform:uppercase;color:#555;margin:10px 0 3px;padding-left:4px}
 .conflict-note{font-size:11px;color:#e0c07a;background:#1f1800;padding:7px 10px;border-radius:8px;margin-bottom:8px;line-height:1.5;border:1px solid #3a2e00}
+.day-type-label{font-size:11px;color:#888;margin-bottom:8px;padding-left:2px}
 .readiness-card{padding:12px 14px;border-radius:12px;margin-bottom:8px;border:1px solid}
 .rc-green{background:#0d1f15;border-color:#1a3a28}
 .rc-yellow{background:#1f1800;border-color:#3a2e00}
@@ -50,7 +57,7 @@ body{font-family:system-ui,sans-serif;background:#0f0f0f;color:#e8e8e8;padding:1
 .rc-green .rc-item{color:#9fd4b8}
 .rc-yellow .rc-item{color:#d4c08a}
 .rc-red .rc-item{color:#d49a9a}
-.rc-item::before{content:"→";position:absolute;left:0}
+.rc-item::before{content:"\2192";position:absolute;left:0}
 .note{font-size:11px;color:#666;padding:6px 10px;border-left:2px solid #333;margin-top:8px;line-height:1.5}
 .principle{padding:10px 12px;border-radius:8px;border:1px solid #2a2a2a;margin-bottom:6px;background:#1a1a1a}
 .p-title{font-size:13px;font-weight:500;color:#f0f0f0;margin-bottom:3px}
@@ -79,6 +86,7 @@ body{font-family:system-ui,sans-serif;background:#0f0f0f;color:#e8e8e8;padding:1
     <input type="date" id="startDate" value="2026-03-23" oninput="renderSlots()" style="font-size:13px;font-weight:500;color:#f0f0f0;background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:2px 6px;cursor:pointer;color-scheme:dark">
     <span style="font-size:11px;color:#555;margin-left:4px" id="weekLabel"></span>
   </div>
+  <div class="wake-wrap">
     <span class="wake-label">Wake time</span>
     <select id="wakeHour" onchange="renderSlots()" style="font-size:15px;font-weight:500;color:#f0f0f0;background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:2px 4px;cursor:pointer">
       <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8" selected>8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option>
@@ -90,15 +98,14 @@ body{font-family:system-ui,sans-serif;background:#0f0f0f;color:#e8e8e8;padding:1
     <select id="wakeAmPm" onchange="renderSlots()" style="font-size:15px;font-weight:500;color:#f0f0f0;background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:2px 4px;cursor:pointer">
       <option value="am" selected>AM</option><option value="pm">PM</option>
     </select>
-    <span style="font-size:11px;color:#999;margin-left:4px">— all times auto-adjust</span>
+    <span style="font-size:11px;color:#999;margin-left:4px">-- all times auto-adjust</span>
   </div>
+  <div class="controls" id="dayButtons"></div>
+  <div id="dayTypeLabel" class="day-type-label"></div>
   <div class="controls">
-    <button class="day-btn active" onclick="setDay('hiit',this)">HIIT day (Mon/Wed/Fri)</button>
-    <button class="day-btn" onclick="setDay('resist',this)">Resistance day (Tue/Thu)</button>
-    <button class="day-btn" onclick="setDay('rest',this)">Rest day (Sat/Sun)</button>
     <select class="readiness-select" onchange="setReadiness(this.value)">
-      <option value="green">Readiness 85–100 (green)</option>
-      <option value="yellow">Readiness 70–84 (yellow)</option>
+      <option value="green">Readiness 85-100 (green)</option>
+      <option value="yellow">Readiness 70-84 (yellow)</option>
       <option value="red">Readiness below 70 (red)</option>
     </select>
   </div>
@@ -109,53 +116,53 @@ body{font-family:system-ui,sans-serif;background:#0f0f0f;color:#e8e8e8;padding:1
 <div id="oura" class="panel">
   <p style="font-size:13px;color:#555;margin-bottom:1rem;line-height:1.6">One number every morning. Everything else follows. If readiness is yellow but sleep score below 60, treat as red.</p>
   <div class="readiness-card rc-green">
-    <div class="rc-title">85–100 — Push day</div>
-    <div class="rc-item">Modafinil 100mg if scheduled (max 3–4×/wk)</div>
+    <div class="rc-title">85-100 -- Push day</div>
+    <div class="rc-item">Modafinil 100mg if scheduled (max 3-4x/wk)</div>
     <div class="rc-item">Bromantane 50mg (modafinil day) or 85mg (no modafinil)</div>
-    <div class="rc-item">Cold shower full 2–3 min</div>
+    <div class="rc-item">Cold shower full 2-3 min</div>
     <div class="rc-item">HIIT at full intensity</div>
     <div class="rc-item">Hardest cognitive task in Block 1</div>
     <div class="rc-item">Sulbutiamine 400mg if on cycle</div>
   </div>
   <div class="readiness-card rc-yellow">
-    <div class="rc-title">70–84 — Moderate day</div>
+    <div class="rc-title">70-84 -- Moderate day</div>
     <div class="rc-item">No modafinil regardless of schedule</div>
     <div class="rc-item">Bromantane full 85mg</div>
-    <div class="rc-item">Cold shower optional — 60 seconds or skip</div>
+    <div class="rc-item">Cold shower optional -- 60 seconds or skip</div>
     <div class="rc-item">HIIT reduced intensity or replace with walk</div>
     <div class="rc-item">Start with medium task, not hardest</div>
     <div class="rc-item">Delay Block 1 by 30 min</div>
   </div>
   <div class="readiness-card rc-red">
-    <div class="rc-title">Below 70 — Recovery day</div>
+    <div class="rc-title">Below 70 -- Recovery day</div>
     <div class="rc-item">No modafinil, no sulbutiamine</div>
     <div class="rc-item">Bromantane 50mg only</div>
     <div class="rc-item">No cold exposure</div>
     <div class="rc-item">Replace HIIT with slow walk</div>
     <div class="rc-item">Admin and low-stakes tasks only</div>
-    <div class="rc-item">Max 3 blocks — do not force more</div>
+    <div class="rc-item">Max 3 blocks -- do not force more</div>
   </div>
   <div class="note">Sleep score below 60 = treat as red regardless of readiness score.</div>
 </div>
 
 <div id="principles" class="panel">
-  <div class="principle"><div class="p-title">50/15 blocks, not 15/15</div><div class="p-body">Your proven data from sales: 50 min work / 15 min outdoor break sustained 4–6 hours daily for months. 15-min blocks are too short for deep work — constant switching overhead destroys flow.</div></div>
-  <div class="principle"><div class="p-title">HIIT pre-Block 1, resistance post-work</div><div class="p-body">RCT: HIIT produced significantly greater ADHD symptom improvement vs non-ADHD peers. Cognitive benefits peak 30–120 min post-session. Your own data: gym before work destroys the day.</div></div>
-  <div class="principle"><div class="p-title">Left-off message at end of every block</div><div class="p-body">One sentence: where you stopped, what's next. ADHD task initiation is the hardest moment. This eliminates cold starts entirely. Non-negotiable — you proved this in sales.</div></div>
-  <div class="principle"><div class="p-title">Phone in bag, not just bricked</div><div class="p-body">Your data: phone checking increased when phone moved from bag to desk — not from a willpower change. Physical distance is a separate layer on top of digital blocking. Both are required.</div></div>
-  <div class="principle"><div class="p-title">Semax BDNF peak = learning blocks</div><div class="p-body">Semax administered at wake+15 peaks BDNF at wake+3h through wake+8h. Schedule hardest skill-building in Blocks 3–6. Admin and shallow work go in Blocks 1–2.</div></div>
-  <div class="principle"><div class="p-title">No phone 60 min post-wake — CAR protection</div><div class="p-body">Cortisol awakening response primes PFC for the day. Early phone use redirects this toward reactive processing. Bromantane takes 1.5–2h to onset — early dopamine spikes raise baseline, making work feel less rewarding.</div></div>
-  <div class="principle"><div class="p-title">16:8 fast — break at 4h into work</div><div class="p-body">If last meal ~midnight, first meal at 4h post-wake = ~16h fast. Extends morning ketosis through peak work blocks. Orexin activation during fasted state promotes wakefulness and cognitive arousal.</div></div>
+  <div class="principle"><div class="p-title">50/15 blocks, not 15/15</div><div class="p-body">Your proven data from sales: 50 min work / 15 min outdoor break sustained 4-6 hours daily for months. 15-min blocks are too short for deep work -- constant switching overhead destroys flow.</div></div>
+  <div class="principle"><div class="p-title">HIIT pre-Block 1, resistance post-work</div><div class="p-body">RCT: HIIT produced significantly greater ADHD symptom improvement vs non-ADHD peers. Cognitive benefits peak 30-120 min post-session. Your own data: gym before work destroys the day.</div></div>
+  <div class="principle"><div class="p-title">Left-off message at end of every block</div><div class="p-body">One sentence: where you stopped, what's next. ADHD task initiation is the hardest moment. This eliminates cold starts entirely. Non-negotiable -- you proved this in sales.</div></div>
+  <div class="principle"><div class="p-title">Phone in bag, not just bricked</div><div class="p-body">Your data: phone checking increased when phone moved from bag to desk -- not from a willpower change. Physical distance is a separate layer on top of digital blocking. Both are required.</div></div>
+  <div class="principle"><div class="p-title">Semax BDNF peak = learning blocks</div><div class="p-body">Semax administered at wake+15 peaks BDNF at wake+3h through wake+8h. Schedule hardest skill-building in Blocks 3-6. Admin and shallow work go in Blocks 1-2.</div></div>
+  <div class="principle"><div class="p-title">No phone 60 min post-wake -- CAR protection</div><div class="p-body">Cortisol awakening response primes PFC for the day. Early phone use redirects this toward reactive processing. Bromantane takes 1.5-2h to onset -- early dopamine spikes raise baseline, making work feel less rewarding.</div></div>
+  <div class="principle"><div class="p-title">16:8 fast -- break at 4h into work</div><div class="p-body">If last meal ~midnight, first meal at 4h post-wake = ~16h fast. Extends morning ketosis through peak work blocks. Orexin activation during fasted state promotes wakefulness and cognitive arousal.</div></div>
 </div>
 
 <div id="experiments" class="panel">
   <div class="exp-card">
-    <div class="exp-title">Daily tracking — 30 seconds at day end</div>
+    <div class="exp-title">Daily tracking -- 30 seconds at day end</div>
     <div class="exp-body">Three numbers only. More than three and you won't do it.</div>
     <div class="mrow">
       <div class="metric"><div class="mnum">1</div><div class="mlabel">Oura readiness</div></div>
       <div class="metric"><div class="mnum">2</div><div class="mlabel">Blocks completed</div></div>
-      <div class="metric"><div class="mnum">3</div><div class="mlabel">Focus quality 1–10</div></div>
+      <div class="metric"><div class="mnum">3</div><div class="mlabel">Focus quality 1-10</div></div>
     </div>
   </div>
   <div class="exp-card">
@@ -164,177 +171,238 @@ body{font-family:system-ui,sans-serif;background:#0f0f0f;color:#e8e8e8;padding:1
       <strong>Baseline:</strong> 2 weeks no changes. Establish personal averages for all 3 metrics.<br><br>
       <strong>Test:</strong> 4 weeks with ONE change only. Never stack two new variables.<br><br>
       <strong>Keep rule:</strong> Blocks completed AND focus quality both up 15%+ vs baseline.<br><br>
-      <strong>Cut rule:</strong> Readiness drops 5+ points on average — cut immediately.
+      <strong>Cut rule:</strong> Readiness drops 5+ points on average -- cut immediately.
     </div>
   </div>
   <div class="exp-card">
     <div class="exp-title">Experiment queue (run in order)</div>
     <div class="exp-body">
-      1. Fixed wake time ±15 min — biggest variance reducer<br>
-      2. Sulbutiamine 400mg AM — D1-ACC mechanism<br>
-      3. Modafinil 100mg 3–4×/wk — highest evidence for persistence<br>
-      4. Ashwagandha KSM-66 600mg PM — cortisol reduction<br>
-      5. HIIT pre-Block 1 daily — ADHD cognitive priming
+      1. Fixed wake time +/-15 min -- biggest variance reducer<br>
+      2. Sulbutiamine 400mg AM -- D1-ACC mechanism<br>
+      3. Modafinil 100mg 3-4x/wk -- highest evidence for persistence<br>
+      4. Ashwagandha KSM-66 600mg PM -- cortisol reduction<br>
+      5. HIIT pre-Block 1 daily -- ADHD cognitive priming
     </div>
     <div class="note">Sequential only. One at a time.</div>
   </div>
 </div>
 
 <script>
-const BLOCK1_RULE='Best for tasks requiring sustained effort on things you already know how to do — the bottleneck is motivation and willingness to push, not learning something new.';
-const SEMAX_RULE='Best for tasks where you are acquiring or encoding something new — the bottleneck is neuroplasticity, not motivation, and BDNF is now at peak to support it.';
+const BLOCK1_RULE='Best for tasks requiring sustained effort on things you already know how to do -- the bottleneck is motivation and willingness to push, not learning something new.';
+const SEMAX_RULE='Best for tasks where you are acquiring or encoding something new -- the bottleneck is neuroplasticity, not motivation, and BDNF is now at peak to support it.';
+
+// === DAY-TO-TYPE MAPPING (configurable) ===
+const DAY_TYPE_MAP = {
+  mon: 'hiit', tue: 'resist', wed: 'hiit', thu: 'resist', fri: 'hiit', sat: 'rest', sun: 'rest'
+};
+
+const DAY_LABELS = {
+  mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun'
+};
+
+const TYPE_LABELS = {
+  hiit: 'HIIT day', resist: 'Resistance day', rest: 'Rest day'
+};
+
+const DOT_CLASSES = {
+  hiit: 'dot-hiit', resist: 'dot-resist', rest: 'dot-rest'
+};
 
 // Single source of truth: one ordered list of all schedule events.
-// Each event declares its duration, which days it appears on, readiness behavior, and day-specific overrides.
-// Start times are computed automatically by summing durations of preceding visible events.
+// dayTypes: which day TYPES this event appears on (hiit, resist, rest)
+// days: which specific DAYS of the week this event appears on (mon, tue, etc.)
+// An event is visible if the current day's type is in dayTypes OR the current day is in days.
 const SCHEDULE = [
   // === MORNING RITUAL ===
-  {id:'wake', type:'ritual', duration:5, days:['hiit','resist','rest'],
-    title:'Wake + Oura check',
-    detail:'Open Oura app on phone to sync (30 sec, Bluetooth only). Put phone down. On laptop go to <a href="https://cloud.ouraring.com" target="_blank" style="color:#7ab3e0">cloud.ouraring.com</a> \u2192 read readiness score \u2192 determines today\u2019s protocol.',
-    overrides:{rest:{detail:'Open Oura app on phone to sync (30 sec, Bluetooth only). Put phone down. On laptop go to <a href="https://cloud.ouraring.com" target="_blank" style="color:#7ab3e0">cloud.ouraring.com</a> \u2192 tells you how much the week cost.'}}},
-  {id:'morning-stack', type:'ritual', duration:15, days:['hiit','resist'],
-    title:'Morning stack',
-    detail:'Bromantane (per readiness) + caffeine 100mg + theanine 200mg + Semax 600mcg + CDP-choline 500mg + L-tyrosine 500mg + sulbutiamine 400mg if on cycle. Take with fat. Stack absorbs while you do the rest of the ritual.',
-    overrides:{resist:{detail:'Bromantane (per readiness) + caffeine 100mg + theanine 200mg + Semax 600mcg + CDP-choline 500mg + L-tyrosine 500mg + sulbutiamine 400mg if on cycle. Take with fat.'}}},
-  {id:'reduced-stack', type:'ritual', duration:15, days:['rest'],
-    title:'Reduced stack',
-    detail:'Bromantane 50mg only. Skip sulbutiamine. Caffeine + theanine. Semax optional.'},
-  {id:'vision-board', type:'ritual', duration:20, days:['hiit','resist','rest'],
+  {id:'wake', type:'ritual', duration:5, dayTypes:['hiit','resist','rest'],
+    title:'Bright light + Oura check',
+    detail:'Turn on bright light. Open Oura app on phone to sync (30 sec, Bluetooth only). Put phone down. On laptop go to <a href="https://cloud.ouraring.com" target="_blank" style="color:#7ab3e0">cloud.ouraring.com</a> \u2192 read readiness score \u2192 determines today\u2019s protocol.',
+    overrides:{rest:{detail:'Turn on bright light. Open Oura app on phone to sync (30 sec, Bluetooth only). Put phone down. On laptop go to <a href="https://cloud.ouraring.com" target="_blank" style="color:#7ab3e0">cloud.ouraring.com</a> \u2192 tells you how much the week cost.'}}},
+  {id:'semax', type:'ritual', duration:3, dayTypes:['hiit','resist'],
+    title:'Semax 600mcg + Moisturizer',
+    detail:'Administer Semax 600mcg + moisturizer. BDNF peaks at wake+3h through wake+8h \u2014 schedule hardest learning in Blocks 3\u20136.',
+    badge:'Semax', badgeClass:'b-semax'},
+  {id:'semax-rest', type:'ritual', duration:3, dayTypes:['rest'],
+    title:'Semax (optional)',
+    detail:'Semax 600mcg optional on rest days.',
+    badge:'Semax', badgeClass:'b-semax'},
+  {id:'walk', type:'ritual', duration:20, dayTypes:['hiit','resist'],
+    title:'Bright light + outdoor walk',
+    detail:'Outside for 15\u201320 min. By now physically awake enough. Natural light supports CAR and circadian alignment.',
+    overrides:{resist:{detail:'20 min walk outside. No HIIT today \u2014 resistance training goes post-work. Natural light supports CAR.', badge:'Resistance', badgeClass:'b-resist', duration:22}}},
+  {id:'vision-board', type:'ritual', duration:20, dayTypes:['hiit','resist','rest'],
     title:'Vision board',
     detail:'20 min. Read vision board. No need to be fully awake \u2014 this is still low-effort.',
     overrides:{
       resist:{detail:'20 min. Read vision board. No need to be fully awake yet.'},
       rest:{detail:'20 min. Read vision board. Rest day \u2014 low pressure.', duration:45}}},
-  {id:'walk', type:'ritual', duration:20, days:['hiit','resist'],
-    title:'Bright light + outdoor walk',
-    detail:'Outside for 15\u201320 min. By now physically awake enough. Natural light supports CAR and circadian alignment.',
-    overrides:{resist:{detail:'20 min walk outside. No HIIT today \u2014 resistance training goes post-work. Natural light supports CAR.', badge:'Resistance', badgeClass:'b-resist', duration:22}}},
-  {id:'hiit-session', type:'ritual', duration:22, days:['hiit'],
+  {id:'morning-stack', type:'ritual', duration:15, dayTypes:['hiit','resist'],
+    title:'Morning stack',
+    detail:'Bromantane (per readiness) + theanine 200mg + CDP-choline 500mg + L-tyrosine 500mg + sulbutiamine 400mg if on cycle. Take with fat. Stack absorbs while you do the rest of the ritual.',
+    overrides:{resist:{detail:'Bromantane (per readiness) + theanine 200mg + CDP-choline 500mg + L-tyrosine 500mg + sulbutiamine 400mg if on cycle. Take with fat.'}}},
+  {id:'reduced-stack', type:'ritual', duration:15, dayTypes:['rest'],
+    title:'Reduced stack',
+    detail:'Bromantane 50mg only. Skip sulbutiamine. Caffeine + theanine.'},
+  {id:'hiit-session', type:'ritual', duration:22, dayTypes:['hiit'],
     title:'HIIT \u2014 20 min',
     detail:'Bike, run, or circuits at 85%+ max HR. Cognitive peak 30\u2013120 min after \u2192 hits Block 1 perfectly. See HIIT protocols tab.',
     badge:'HIIT', badgeClass:'b-hiit',
     readiness:{red:'dim'}},
-  {id:'cold-shower', type:'ritual', duration:10, days:['hiit','resist'],
+  {id:'cold-shower', type:'ritual', duration:10, dayTypes:['hiit','resist'],
     title:'Cold shower',
-    detail:'10 min. Fully cold. Skip on red days.',
+    detail:'2 min. Fully cold. Skip on red days.',
     badge:'green/yellow', badgeClass:'b-green',
     readiness:{red:'dim'}},
-  {id:'peptides', type:'ritual', duration:3, days:['hiit','resist','rest'],
-    title:'Take peptides',
-    detail:'Inject GHK-CU and Selank.'},
-  {id:'meditation', type:'ritual', duration:12, days:['hiit','resist','rest'],
-    title:'13 Minute Meditation',
-    detail:'Focus on breath. When attention wanders, redirect it back. Each redirection is a repetition \u2014 you get better every time.'},
-  {id:'calendar-review', type:'ritual', duration:15, days:['hiit','resist','rest'],
+  {id:'calendar-review', type:'ritual', duration:15, dayTypes:['hiit','resist','rest'],
     title:'Define the problem + calendar review',
     detailFn:function(ctx){return ctx.calendarDetail;}},
-  {id:'phone-bag', type:'ritual', duration:2, days:['hiit','resist'],
+  {id:'peptides', type:'ritual', duration:3, dayTypes:['hiit','resist','rest'],
+    title:'Take peptides + caffeine',
+    detail:'Inject GHK-CU and Selank. Caffeine 100mg.'},
+  {id:'meditation', type:'ritual', duration:12, dayTypes:['hiit','resist','rest'],
+    title:'13 Minute Meditation',
+    detail:'Focus on breath. When attention wanders, redirect it back. Each redirection is a repetition \u2014 you get better every time.'},
+  {id:'phone-bag', type:'ritual', duration:2, dayTypes:['hiit','resist'],
     title:'Phone \u2192 bag. Brick on.',
     detail:'Two barriers: Brick app + physical bag. Not on desk.'},
 
   // === WORK BLOCKS (hiit + resist: 6 blocks of 50/15) ===
-  {id:'block-1', type:'work', duration:50, days:['hiit','resist'],
+  {id:'block-1', type:'work', duration:50, dayTypes:['hiit','resist'],
     title:'Block 1 \u2014 hardest effort task',
     detail:'Start on left-off message. Hardest task first (green). Medium difficulty (yellow). Admin only (red). Write left-off at end.',
     rule:BLOCK1_RULE, ruleClass:'',
     overrides:{resist:{detail:'Left-off message task. Hardest (green), medium (yellow), admin (red).'}}},
-  {id:'break-1', type:'break', duration:15, days:['hiit','resist'],
+  {id:'break-1', type:'break', duration:15, dayTypes:['hiit','resist'],
     title:'Break 1 \u2014 outdoor walk',
     detail:'Shoes on, outside. No phone. 15 min.',
     overrides:{resist:{title:'Break 1', detail:'Walk, no phone.'}}},
-  {id:'block-2', type:'work', duration:50, days:['hiit','resist'],
+  {id:'block-2', type:'work', duration:50, dayTypes:['hiit','resist'],
     title:'Block 2',
     detail:'Continue deep work. Blocks tracker +1.',
     overrides:{resist:{detail:''}}},
-  {id:'break-2', type:'break', duration:15, days:['hiit','resist'],
+  {id:'break-2', type:'break', duration:15, dayTypes:['hiit','resist'],
     title:'Break 2 \u2014 outdoor walk',
     detail:'No phone.',
     overrides:{resist:{title:'Break 2', detail:''}}},
-  {id:'block-3', type:'work', duration:50, days:['hiit','resist'],
+  {id:'block-3', type:'work', duration:50, dayTypes:['hiit','resist'],
     title:'Block 3 \u2190 BDNF peak opens \u2014 hardest learning task',
     detail:'Semax BDNF peaks at wake+3h. Switch to your hardest learning task from here.',
     rule:SEMAX_RULE, ruleClass:'semax-rule', badge:'Semax peak', badgeClass:'b-semax'},
-  {id:'break-3', type:'break', duration:15, days:['hiit','resist'],
+  {id:'break-3', type:'break', duration:15, dayTypes:['hiit','resist'],
     title:'Break 3 + first meal',
     detail:'~16h fast breaks here. High-protein, moderate fat, low-glycemic. No glucose crash into Blocks 4\u20136.',
     overrides:{resist:{detail:'Break fast. High protein/fat, low glycemic.'}}},
-  {id:'block-4', type:'work', duration:50, days:['hiit','resist'],
+  {id:'block-4', type:'work', duration:50, dayTypes:['hiit','resist'],
     title:'Block 4 \u2014 learning continues',
     detail:'Still in BDNF peak window. Continue skill acquisition.',
     readiness:{red:'dim'},
     overrides:{resist:{detail:'Still in BDNF peak window.'}}},
-  {id:'break-4', type:'break', duration:15, days:['hiit','resist'],
+  {id:'break-4', type:'break', duration:15, dayTypes:['hiit','resist'],
     title:'Break 4 \u2014 outdoor walk',
     detail:'No phone.',
     overrides:{resist:{title:'Break 4', detail:''}}},
-  {id:'block-5', type:'work', duration:50, days:['hiit','resist'],
+  {id:'block-5', type:'work', duration:50, dayTypes:['hiit','resist'],
     title:'Block 5 \u2014 learning continues',
     detail:'BDNF window remains open.',
     readiness:{red:'dim'}},
-  {id:'break-5', type:'break', duration:15, days:['hiit','resist'],
+
+  // === WEEKLY HABITS (day-specific) ===
+  {id:'decision-review', type:'review', duration:15, days:['tue'],
+    title:'Decision Review',
+    detail:'Review this week\u2019s 3 most significant decisions. Write: expected outcome, actual outcome, adjustment for next time. Running doc.',
+    badge:'Weekly', badgeClass:'b-weekly'},
+
+  {id:'pre-mortem', type:'review', duration:10, days:['thu'],
+    title:'Pre-Mortem',
+    detail:'Pick current highest-stakes project. Write: "It\u2019s 6 months later and this failed completely. What happened?" List 3\u20135 failure modes. Pick top one. What\u2019s the cheapest test to eliminate it?',
+    badge:'Weekly', badgeClass:'b-weekly'},
+
+  // === CONTINUE WORK BLOCKS ===
+  {id:'break-5', type:'break', duration:15, dayTypes:['hiit','resist'],
     title:'Break 5 \u2014 logistics only (5 min)',
     detail:'Unlock phone to confirm tomorrow\u2019s plans. Re-brick immediately.',
     overrides:{resist:{title:'Break 5 \u2014 logistics', detail:'5 min only.'}}},
-  {id:'block-6', type:'work', duration:50, days:['hiit','resist'],
+  {id:'block-6', type:'work', duration:50, dayTypes:['hiit','resist'],
     title:'Block 6',
     detail:'Final deep block. Write left-off message.',
     readiness:{red:'dim'},
     overrides:{resist:{detail:'Write left-off message.'}}},
 
   // === WORK BLOCKS (rest day: 1-2 light blocks) ===
-  {id:'rest-blocks', type:'work', duration:85, days:['rest'],
+  {id:'rest-blocks', type:'work', duration:85, dayTypes:['rest'],
     title:'1\u20132 light blocks max',
     detail:'Admin, easy tasks, doc review only. No hard skill work.'},
-  {id:'rest-break', type:'break', duration:60, days:['rest'],
+  {id:'rest-break', type:'break', duration:60, dayTypes:['rest'],
     title:'Long outdoor break',
     detail:'30+ min. No agenda.'},
 
+  // === EOD REVIEW (all work days) ===
+  {id:'eod-tracker', type:'review', duration:2, dayTypes:['hiit','resist'],
+    title:'EOD Google Sheets tracker',
+    detail:'Log all columns: date, blocks, readiness, focus 1\u201310, visualization min, conceptual insights, actionable insights, posts, app blocks, process blocks, frat blocks. Under 60 seconds.',
+    badge:'Daily', badgeClass:'b-weekly'},
+  {id:'eod-woop', type:'review', duration:5, dayTypes:['hiit','resist'],
+    title:'WOOP for tomorrow',
+    detail:'Paper and pen (not digital). Wish \u2192 Outcome \u2192 Obstacle \u2192 Plan. Specific to tomorrow\u2019s hardest task. 3\u20135 min. Creates implementation intention tonight while WM isn\u2019t depleted.',
+    badge:'Daily', badgeClass:'b-weekly'},
+  {id:'eod-social', type:'review', duration:5, dayTypes:['hiit','resist'],
+    title:'Girl logistics / social messages',
+    detail:'Confirmed here only \u2014 not during work blocks.'},
+
+  // === WEEKLY REVIEW (Sunday only) ===
+  {id:'weekly-review', type:'review', duration:20, days:['sun'],
+    title:'Weekly Review',
+    detail:'(1) Check Google Sheets \u2014 avg blocks, focus, readiness for the week. (2) Were all 4 Laws followed? (3) One experiment variable: tracking toward keep or cut? (4) Next week\u2019s single most important outcome. (5) Weekly WOOP.',
+    badge:'Weekly', badgeClass:'b-weekly'},
+
   // === POST-WORK / MEALS ===
-  {id:'rest-meal', type:'food', duration:60, days:['rest'],
+  {id:'rest-meal', type:'food', duration:60, dayTypes:['rest'],
     title:'First meal',
     detail:'Break fast. Good food.'},
-  {id:'dinner', type:'food', duration:45, days:['hiit','resist'],
+  {id:'dinner', type:'food', duration:45, dayTypes:['hiit','resist'],
     title:'Dinner',
     detail:'Sufficient protein + tyrosine for tomorrow\u2019s bromantane substrate.',
     overrides:{resist:{title:'Dinner \u2014 pre-gym meal', detail:'Carbs + protein for resistance session.'}}},
-  {id:'resistance', type:'gym', duration:90, days:['resist'],
+  {id:'resistance', type:'gym', duration:90, dayTypes:['resist'],
     title:'Resistance training',
     detail:'Full gym session. Post-work order is non-negotiable \u2014 gym before work destroys productivity.',
     badge:'Resistance', badgeClass:'b-resist'},
 
   // === EVENING ===
-  {id:'social-rest', type:'evening', duration:180, days:['rest'],
+  {id:'social-rest', type:'evening', duration:180, dayTypes:['rest'],
     title:'Social / recovery time',
     detail:'Human contact. Do not work.'},
-  {id:'evening-stack', type:'evening', duration:30, days:['hiit','resist','rest'],
+  {id:'evening-stack', type:'evening', duration:30, dayTypes:['hiit','resist','rest'],
     title:'Evening stack',
     detail:'Ashwagandha KSM-66 300mg + Bacopa 300mg (with food) + Lithium orotate 5mg.',
     overrides:{
       resist:{detail:'Ashwagandha + Bacopa + Lithium.'},
       rest:{detail:'Ashwagandha + Bacopa + Lithium.'}}},
-  {id:'novelty', type:'evening', duration:270, days:['hiit','resist'],
+  {id:'novelty', type:'evening', duration:270, dayTypes:['hiit','resist'],
     title:'Novelty valve',
     detail:'Social, entertainment, phone unlocked. Protect this window.',
     overrides:{resist:{detail:'Social, entertainment.'}}},
-  {id:'rest-evening', type:'evening', duration:240, days:['rest'],
+  {id:'rest-evening', type:'evening', duration:240, dayTypes:['rest'],
     title:'Free evening',
     detail:'Unstructured time. Wind down when ready.'},
-  {id:'wind-down', type:'evening', duration:90, days:['hiit'],
+  {id:'wind-down', type:'evening', duration:90, dayTypes:['hiit'],
     title:'Wind down',
     detail:'No screens. Room 65\u201368\u00b0F.'},
-  {id:'sleep-hiit', type:'evening', duration:0, days:['hiit'],
+  {id:'sleep-hiit', type:'evening', duration:0, dayTypes:['hiit'],
     title:'Sleep',
     detail:'Target 7.5\u20138.5h opportunity.'},
-  {id:'sleep-resist', type:'evening', duration:0, days:['resist'],
+  {id:'sleep-resist', type:'evening', duration:0, dayTypes:['resist'],
     title:'Wind down \u2192 sleep',
     detail:'No screens. Cool room. 7.5\u20138.5h target.'},
-  {id:'sleep-rest', type:'evening', duration:0, days:['rest'],
+  {id:'sleep-rest', type:'evening', duration:0, dayTypes:['rest'],
     title:'Sleep \u2014 earlier tonight',
     detail:'Target 8.5h. Restores SWS/REM for next cycle.'},
 ];
 
-let currentDay='hiit', currentReadiness='green';
+// Auto-detect today's day of week
+const JS_DAY_TO_KEY = ['sun','mon','tue','wed','thu','fri','sat'];
+let currentDay=JS_DAY_TO_KEY[new Date().getDay()];
+let currentReadiness='green';
 
 function showTab(id,btn){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
@@ -342,13 +410,34 @@ function showTab(id,btn){
   document.getElementById(id).classList.add('active');
   btn.classList.add('active');
 }
-function setDay(day,btn){
+
+function setDay(day){
   currentDay=day;
-  document.querySelectorAll('.day-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
+  document.querySelectorAll('.day-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.day===day);
+  });
+  document.getElementById('dayTypeLabel').textContent=
+    TYPE_LABELS[DAY_TYPE_MAP[day]] + ' (' + DAY_TYPE_MAP[day] + ')';
   renderSlots();
 }
+
 function setReadiness(r){currentReadiness=r;renderSlots();}
+
+function renderDayButtons(){
+  const container=document.getElementById('dayButtons');
+  container.innerHTML='';
+  Object.keys(DAY_LABELS).forEach(day=>{
+    const btn=document.createElement('button');
+    btn.className='day-btn' + (day===currentDay?' active':'');
+    btn.dataset.day=day;
+    btn.onclick=()=>setDay(day);
+    const dayType=DAY_TYPE_MAP[day];
+    btn.innerHTML=DAY_LABELS[day] + '<span class="day-type-dot '+DOT_CLASSES[dayType]+'"></span>';
+    container.appendChild(btn);
+  });
+  document.getElementById('dayTypeLabel').textContent=
+    TYPE_LABELS[DAY_TYPE_MAP[currentDay]] + ' (' + DAY_TYPE_MAP[currentDay] + ')';
+}
 
 function addMinutes(baseHour,baseMin,offset){
   const total=baseHour*60+baseMin+offset;
@@ -356,7 +445,7 @@ function addMinutes(baseHour,baseMin,offset){
   const m=total%60;
   const ampm=h>=12?'pm':'am';
   const display=h>12?h-12:(h===0?12:h);
-  return `${display}:${m.toString().padStart(2,'0')}${ampm}`;
+  return display+':'+m.toString().padStart(2,'0')+ampm;
 }
 
 function parseWakeTime(){
@@ -385,14 +474,20 @@ function renderSlots(){
   document.getElementById('weekLabel').textContent='Week '+week;
   const ctx={calendarDetail:getCalendarDetail(week)};
   const {h:wh,m:wm}=parseWakeTime();
+  const dayType=DAY_TYPE_MAP[currentDay];
 
-  // Filter schedule for current day type
-  const visible=SCHEDULE.filter(e=>e.days.includes(currentDay));
+  // Filter: event is visible if its dayTypes includes the current day's type
+  // OR its days includes the current day name
+  const visible=SCHEDULE.filter(e=>{
+    const matchesType=e.dayTypes && e.dayTypes.includes(dayType);
+    const matchesDay=e.days && e.days.includes(currentDay);
+    return matchesType || matchesDay;
+  });
 
   // Resolve overrides, compute cumulative offsets, apply readiness
   let offset=0;
   const resolved=visible.map(event=>{
-    const dayOverride=event.overrides?.[currentDay]||{};
+    const dayOverride=event.overrides?.[dayType]||{};
     const merged={...event,...dayOverride};
     const duration=dayOverride.duration!=null?dayOverride.duration:event.duration;
     if(event.detailFn) merged.detail=event.detailFn(ctx);
@@ -413,7 +508,7 @@ function renderSlots(){
   // Render
   const container=document.getElementById('slots');
   container.innerHTML='';
-  const sectionLabels={ritual:'Morning ritual',work:'Work blocks (50 min work \u00b7 15 min break)',break:'',gym:'Gym',food:'Nutrition',evening:'Evening'};
+  const sectionLabels={ritual:'Morning ritual',work:'Work blocks (50 min work \u00b7 15 min break)',break:'',gym:'Gym',food:'Nutrition',evening:'Evening',review:'Review'};
   let lastType=null;
   resolved.forEach(s=>{
     if(s.type!==lastType&&s.type!=='break'){
@@ -425,27 +520,29 @@ function renderSlots(){
     }
     const timeStr=addMinutes(wh,wm,s.computedOffset);
     const el=document.createElement('div');
-    el.className=`slot ${s.type}${s.dimmed?' dimmed':''}`;
-    let badgeHtml=s.badge?`<span class="badge ${s.badgeClass||''}">${s.badge}</span>`:'';
-    let ruleHtml=s.rule?`<div class="slot-rule ${s.ruleClass||''}">${s.rule}</div>`:'';
-    el.innerHTML=`
-      <div class="slot-time">${timeStr}</div>
-      <div class="slot-content">
-        <div class="slot-title">${s.title}${badgeHtml}</div>
-        ${s.detail?`<div class="slot-detail">${s.detail}</div>`:''}
-        ${ruleHtml}
-      </div>`;
+    el.className='slot '+s.type+(s.dimmed?' dimmed':'');
+    let badgeHtml=s.badge?'<span class="badge '+(s.badgeClass||'')+'">'+s.badge+'</span>':'';
+    let ruleHtml=s.rule?'<div class="slot-rule '+(s.ruleClass||'')+'">'+s.rule+'</div>':'';
+    el.innerHTML=
+      '<div class="slot-time">'+timeStr+'</div>'+
+      '<div class="slot-content">'+
+        '<div class="slot-title">'+s.title+badgeHtml+'</div>'+
+        (s.detail?'<div class="slot-detail">'+s.detail+'</div>':'')+
+        ruleHtml+
+      '</div>';
     container.appendChild(el);
   });
 }
+
+renderDayButtons();
 renderSlots();
 </script>
 
 <div id="hiit" class="panel">
-<p style="font-size:13px;color:#aaa;margin-bottom:1rem;line-height:1.6">Three rotating protocols. The mechanism is lactate, which drives BDNF. Peak lactate protocol: 8 x 30-sec maximal effort / 90-sec recovery. Keep sessions under 20 min — longer actively reduces BDNF.</p>
+<p style="font-size:13px;color:#aaa;margin-bottom:1rem;line-height:1.6">Three rotating protocols. The mechanism is lactate, which drives BDNF. Peak lactate protocol: 8 x 30-sec maximal effort / 90-sec recovery. Keep sessions under 20 min -- longer actively reduces BDNF.</p>
 
 <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:12px 14px;margin-bottom:12px">
-  <div style="font-size:11px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#555;margin-bottom:10px">Garmin HR targets — check after every interval</div>
+  <div style="font-size:11px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#555;margin-bottom:10px">Garmin HR targets -- check after every interval</div>
   <div style="display:flex;gap:8px">
     <div style="flex:1;background:#0d1f33;border:1px solid #1a3a5c;border-radius:8px;padding:10px;text-align:center">
       <div style="font-size:18px;font-weight:500;color:#f0f0f0">167-187</div>
@@ -460,7 +557,7 @@ renderSlots();
 </div>
 
 <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:12px 14px;margin-bottom:12px">
-  <div style="font-size:11px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#555;margin-bottom:8px">Beginner progression — intervals per session</div>
+  <div style="font-size:11px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#555;margin-bottom:8px">Beginner progression -- intervals per session</div>
   <div style="display:flex;gap:6px">
     <div style="flex:1;background:#111;border-radius:6px;padding:8px;text-align:center;border:1px solid #222">
       <div style="font-size:16px;font-weight:500;color:#f0f0f0">4x</div>
@@ -480,7 +577,7 @@ renderSlots();
 <div style="background:#0d1f33;border:1px solid #1a3a5c;border-radius:12px;padding:12px 14px;margin-bottom:8px">
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
     <span style="background:#1a3a5c;color:#7ab3e0;font-size:10px;font-weight:500;padding:2px 8px;border-radius:999px">Monday</span>
-    <span style="font-size:14px;font-weight:500;color:#f0f0f0">Protocol A — Outdoor sprints</span>
+    <span style="font-size:14px;font-weight:500;color:#f0f0f0">Protocol A -- Outdoor sprints</span>
   </div>
   <div style="font-size:12px;color:#e8e8e8;line-height:1.7">
     Most effective option. Sprinting recruits maximum muscle mass = highest lactate output of any bodyweight exercise.<br><br>
@@ -495,7 +592,7 @@ renderSlots();
 <div style="background:#0d2010;border:1px solid #1a3a20;border-radius:12px;padding:12px 14px;margin-bottom:8px">
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
     <span style="background:#1a3a20;color:#7ac09a;font-size:10px;font-weight:500;padding:2px 8px;border-radius:999px">Wednesday</span>
-    <span style="font-size:14px;font-weight:500;color:#f0f0f0">Protocol B — Bodyweight circuit</span>
+    <span style="font-size:14px;font-weight:500;color:#f0f0f0">Protocol B -- Bodyweight circuit</span>
   </div>
   <div style="font-size:12px;color:#e8e8e8;line-height:1.7">
     No equipment, no setup. Each interval is max-effort burpees for 30 seconds.<br><br>
@@ -510,7 +607,7 @@ renderSlots();
 <div style="background:#1a1000;border:1px solid #3a2800;border-radius:12px;padding:12px 14px;margin-bottom:8px">
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
     <span style="background:#3a2800;color:#e0c07a;font-size:10px;font-weight:500;padding:2px 8px;border-radius:999px">Friday</span>
-    <span style="font-size:14px;font-weight:500;color:#f0f0f0">Protocol C — Dumbbell thrusters</span>
+    <span style="font-size:14px;font-weight:500;color:#f0f0f0">Protocol C -- Dumbbell thrusters</span>
   </div>
   <div style="font-size:12px;color:#e8e8e8;line-height:1.7">
     HIIT and resistance simultaneously. Thrusters involve both lower and upper body, maximizing muscle recruitment and lactate output.<br><br>
