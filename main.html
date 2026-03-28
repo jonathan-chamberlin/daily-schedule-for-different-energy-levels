@@ -89,11 +89,11 @@ body{font-family:system-ui,sans-serif;background:#0f0f0f;color:#e8e8e8;padding:1
   <div class="wake-wrap">
     <span class="wake-label">Wake time</span>
     <select id="wakeHour" onchange="renderSlots()" style="font-size:15px;font-weight:500;color:#f0f0f0;background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:2px 4px;cursor:pointer">
-      <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8" selected>8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option>
+      <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7" selected>7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option>
     </select>
     <span style="font-size:15px;font-weight:500;color:#f0f0f0">:</span>
     <select id="wakeMin" onchange="renderSlots()" style="font-size:15px;font-weight:500;color:#f0f0f0;background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:2px 4px;cursor:pointer">
-      <option value="0" selected>00</option><option value="5">05</option><option value="10">10</option><option value="15">15</option><option value="20">20</option><option value="25">25</option><option value="30">30</option><option value="35">35</option><option value="40">40</option><option value="45">45</option><option value="50">50</option><option value="55">55</option>
+      <option value="0">00</option><option value="5">05</option><option value="10">10</option><option value="15" selected>15</option><option value="20">20</option><option value="25">25</option><option value="30">30</option><option value="35">35</option><option value="40">40</option><option value="45">45</option><option value="50">50</option><option value="55">55</option>
     </select>
     <select id="wakeAmPm" onchange="renderSlots()" style="font-size:15px;font-weight:500;color:#f0f0f0;background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:2px 4px;cursor:pointer">
       <option value="am" selected>AM</option><option value="pm">PM</option>
@@ -193,7 +193,17 @@ const SEMAX_RULE='Best for tasks where you are acquiring or encoding something n
 
 // === DAY-TO-TYPE MAPPING (configurable) ===
 const DAY_TYPE_MAP = {
-  mon: 'hiit', tue: 'resist', wed: 'hiit', thu: 'resist', fri: 'hiit', sat: 'rest', sun: 'rest'
+  mon: 'hiit', tue: 'resist', wed: 'hiit', thu: 'resist', fri: 'hiit', sat: 'hiit', sun: 'rest'
+};
+
+const SCRIPT_ROTATION = {
+  mon: {script:'1', name:'Deep Work Through the Energy Dip'},
+  tue: {script:'3', name:'Recognition and Effortless Connection'},
+  wed: {script:'1', name:'Deep Work Through the Energy Dip'},
+  thu: {script:'4', name:'Your Kid\u2019s First Build'},
+  fri: {script:'1', name:'Deep Work Through the Energy Dip'},
+  sat: {script:'3', name:'Recognition and Effortless Connection'},
+  sun: {script:'2', name:'The Arrived State'}
 };
 
 const DAY_LABELS = {
@@ -230,12 +240,14 @@ const SCHEDULE = [
     title:'Bright light + outdoor walk',
     detail:'Outside for 15\u201320 min. By now physically awake enough. Natural light supports CAR and circadian alignment.',
     overrides:{resist:{detail:'20 min walk outside. No HIIT today \u2014 resistance training goes post-work. Natural light supports CAR.', badge:'Resistance', badgeClass:'b-resist', duration:22}}},
-  {id:'vision-board', type:'ritual', duration:20, dayTypes:['hiit','resist','rest'],
-    title:'Vision board',
-    detail:'20 min. Read vision board. No need to be fully awake \u2014 this is still low-effort.',
-    overrides:{
-      resist:{detail:'20 min. Read vision board. No need to be fully awake yet.'},
-      rest:{detail:'20 min. Read vision board. Rest day \u2014 low pressure.', duration:45}}},
+  {id:'monday-calibration', type:'ritual', duration:15, days:['mon'],
+    title:'Monday morning calibration',
+    detail:'(1) Score last week: count CWOOPP sessions done (target 6/7). Below 5 = find where the chain broke. (2) Vividness check: rate each script 1\u20135, flag any below 3. (3) Update scripts from real life \u2014 fold in wins, fix mismatches. (4) This week\u2019s primary obstacle + if-then plan. <a href="https://www.notion.so/jchamberlin/Evidence-back-to-CWOOPP-visualization-episodic-future-thinking-WOOP-Improved-goal-images-330afe0dcf0380f38a78e54a328195d8" target="_blank" style="color:#7ab3e0">CWOOPP reference</a>',
+    badge:'Weekly', badgeClass:'b-weekly'},
+  {id:'cwoopp', type:'ritual', duration:20, dayTypes:['hiit','resist','rest'],
+    title:'CWOOPP visualization',
+    detailFn:function(ctx){return ctx.cwooppDetail;},
+    badge:'CWOOPP', badgeClass:'b-semax'},
   {id:'reduced-stack', type:'ritual', duration:15, dayTypes:['rest'],
     title:'Reduced stack',
     detail:'Bromantane 50mg only. Skip sulbutiamine. Caffeine + theanine.'},
@@ -249,9 +261,9 @@ const SCHEDULE = [
     detail:'2 min. Fully cold. Skip on red days.',
     badge:'green/yellow', badgeClass:'b-green',
     readiness:{red:'dim'}},
-  {id:'calendar-review', type:'ritual', duration:15, dayTypes:['hiit','resist','rest'],
-    title:'Define the problem + calendar review',
-    detailFn:function(ctx){return ctx.calendarDetail;}},
+  {id:'calendar-task-review', type:'ritual', duration:5, dayTypes:['hiit','resist','rest'],
+    title:'Calendar + task review',
+    detail:'Check calendar for today\u2019s commitments. Review task list. Confirm Block 1 target.'},
   {id:'morning-stack-peptides', type:'ritual', duration:5, dayTypes:['hiit','resist'],
     title:'Morning stack + peptides',
     detail:'Bromantane (per readiness) + theanine 200mg + CDP-choline 500mg + L-tyrosine 500mg + sulbutiamine 400mg if on cycle. Take with fat. Inject GHK-CU and Selank. Caffeine 100mg.',
@@ -259,10 +271,7 @@ const SCHEDULE = [
   {id:'rest-peptides', type:'ritual', duration:5, dayTypes:['rest'],
     title:'Morning stack + peptides',
     detail:'Inject GHK-CU and Selank. Caffeine 100mg.'},
-  {id:'meditation', type:'ritual', duration:12, dayTypes:['hiit','resist','rest'],
-    title:'13 Minute Meditation',
-    detail:'Focus on breath. When attention wanders, redirect it back. Each redirection is a repetition \u2014 you get better every time.'},
-  {id:'makeup', type:'ritual', duration:10, dayTypes:['hiit','resist','rest'],
+{id:'makeup', type:'ritual', duration:10, dayTypes:['hiit','resist','rest'],
     title:'Makeup',
     detail:'Eye drops, eyelash curler, concealer, contour, eye liner, powder, mascara.'},
   {id:'phone-bag', type:'ritual', duration:2, dayTypes:['hiit','resist'],
@@ -344,10 +353,6 @@ const SCHEDULE = [
     title:'EOD Google Sheets tracker',
     detail:'Log all columns: date, blocks, readiness, focus 1\u201310, visualization min, conceptual insights, actionable insights, posts, app blocks, process blocks, frat blocks. Under 60 seconds.',
     badge:'Daily', badgeClass:'b-weekly'},
-  {id:'eod-woop', type:'review', duration:5, dayTypes:['hiit','resist'],
-    title:'WOOP for tomorrow',
-    detail:'Paper and pen (not digital). Wish \u2192 Outcome \u2192 Obstacle \u2192 Plan. Specific to tomorrow\u2019s hardest task. 3\u20135 min. Creates implementation intention tonight while WM isn\u2019t depleted.',
-    badge:'Daily', badgeClass:'b-weekly'},
   {id:'eod-social', type:'review', duration:5, dayTypes:['hiit','resist'],
     title:'Girl logistics / social messages',
     detail:'Confirmed here only \u2014 not during work blocks.'},
@@ -388,6 +393,10 @@ const SCHEDULE = [
   {id:'rest-evening', type:'evening', duration:240, dayTypes:['rest'],
     title:'Free evening',
     detail:'Unstructured time. Wind down when ready.'},
+  {id:'nightly-replay', type:'evening', duration:3, dayTypes:['hiit','resist','rest'],
+    title:'Nightly visualization replay',
+    detail:'In bed, eyes closed. Replay this morning\u2019s script once, loosely. If something real happened today that relates \u2014 you caught the pull, had a social win, shipped something \u2014 replay that instead, overlaid with the script\u2019s emotional tone. Leverages slow-wave sleep consolidation. Don\u2019t time it. <a href="https://www.notion.so/jchamberlin/Evidence-back-to-CWOOPP-visualization-episodic-future-thinking-WOOP-Improved-goal-images-330afe0dcf0380f38a78e54a328195d8" target="_blank" style="color:#7ab3e0">CWOOPP reference</a>',
+    badge:'CWOOPP', badgeClass:'b-semax'},
   {id:'wind-down', type:'evening', duration:90, dayTypes:['hiit'],
     title:'Wind down',
     detail:'No screens. Room 65\u201368\u00b0F.'},
@@ -466,6 +475,18 @@ function getWeekNumber(){
   return Math.max(1,Math.floor((today-startDate)/(7*24*60*60*1000))+1);
 }
 
+function getCwooppDetail(){
+  const p=SCRIPT_ROTATION[currentDay];
+  const link='<a href="https://www.notion.so/jchamberlin/Evidence-back-to-CWOOPP-visualization-episodic-future-thinking-WOOP-Improved-goal-images-330afe0dcf0380f38a78e54a328195d8" target="_blank" style="color:#7ab3e0">CWOOPP reference</a>';
+  return 'Today: <strong>Script '+p.script+' \u2014 '+p.name+'</strong>. '+
+    'C \u2014 Constraint (30s): write "Today\u2019s main problem is ___" + say "I\u2019m doing great" with a big smile. '+
+    'W \u2014 Wish (1 min): scan all four scripts, then focus on today\u2019s. '+
+    'O \u2014 Outcome (2 min): close eyes, run the script\u2019s ideal scene. Sensory detail, first person, present tense. '+
+    'O \u2014 Obstacle (2 min): what internal obstacle shows up today? Visualize the feeling arriving. '+
+    'P \u2014 Process (6 min): run the full sequence of noticing the obstacle, executing the counter-move, staying, solving. Mundane and real. '+
+    'P \u2014 Plan (1 min): "If [trigger], then I will [2\u20135 sec action]." Write on paper. '+link;
+}
+
 function getCalendarDetail(week){
   if(week<=3) return 'Week '+week+' (install phase). Write: "Today\'s main problem is ___." (30 sec). Say "I\'m doing great!" \u2014 lock it in. That\'s it. Do not expand yet. Goal is consistency, not insight.';
   if(week<=10) return 'Week '+week+' (full ritual). Write the 5 prompts: (1) What is today\'s single most important problem? (2) What are its 3 components? (3) What is the binding constraint? (4) Time estimate per component (+50% buffer). (5) Pre-mortem: what\'s most likely to go wrong? Then start on the constraint first.';
@@ -475,7 +496,7 @@ function getCalendarDetail(week){
 function renderSlots(){
   const week=getWeekNumber();
   document.getElementById('weekLabel').textContent='Week '+week;
-  const ctx={calendarDetail:getCalendarDetail(week)};
+  const ctx={calendarDetail:getCalendarDetail(week),cwooppDetail:getCwooppDetail()};
   const {h:wh,m:wm}=parseWakeTime();
   const dayType=DAY_TYPE_MAP[currentDay];
 
